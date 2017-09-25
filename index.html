@@ -1,0 +1,91 @@
+<html>
+<head>
+  <title>Monitoramento de Umidade e Temperatura do Ambiente - Sala dos Servidores</title>
+</head>
+<script src="js/paho-mqtt/mqttws31.js" type="text/javascript"></script>
+<script type="text/javascript">
+
+  // Create a client instance
+  client = new Paho.MQTT.Client("m11.cloudmqtt.com", 36064,"web_31452"); 
+  //Example client = new Paho.MQTT.Client("m11.cloudmqtt.com", 32903, "web_" + parseInt(Math.random() * 100, 10));
+
+  // set callback handlers
+  client.onConnectionLost = onConnectionLost;
+  client.onMessageArrived = onMessageArrived;
+  var options = {
+    useSSL: true,
+    userName: "erkinzsl",
+    password: "fk2zYZaZGlWt",
+    onSuccess:onConnect,
+    onFailure:doFail
+  }
+
+  // connect the client
+  client.connect(options);
+
+  // called when the client connects
+  function onConnect() {
+    // Once a connection has been made, make a subscription and send a message.
+    console.log("onConnect");
+    client.subscribe("/fiap/sendMessage/31451");
+    // message = new Paho.MQTT.Message("Hello CloudMQTT");
+    // message.destinationName = "/cloudmqtt";
+    // client.send(message); 
+  }
+
+  function doFail(e){
+    console.log(e);
+  }
+
+  // called when the client loses its connection
+  function onConnectionLost(responseObject) {
+    if (responseObject.errorCode !== 0) {
+      console.log("onConnectionLost:"+responseObject.errorMessage);
+    }
+  }
+
+  // called when a message arrives
+  function onMessageArrived(message) {
+  
+    var msg = "";
+	var pos = 0;
+    var temperatura = "";
+	var umidade = "";
+	var temperaturaAvaliar = 0;
+  
+    msg = message.payloadString.toString();
+	pos = msg.indexOf("##");
+	temperatura = msg.substring(0,pos);
+    umidade = msg.substring((pos+2));
+	temperaturaAvaliar = Number(temperatura);
+  
+    console.log("onMessageArrived:"+message.payloadString);
+	
+	document.getElementById("temperatureParagraph").innerHTML = "Temperatura: " +temperatura + "(Graus Celsius)";
+	document.getElementById("umidityParagraph").innerHTML = "Umidade: " + umidade + " (%)";
+	
+	if( temperaturaAvaliar > 25 )
+		document.getElementById("figura_sala").src = "./img/sala_servidores_red.png";
+	else
+		document.getElementById("figura_sala").src = "./img/sala_servidores_normal.png";
+  }
+  
+  function sleep(millis)
+  {
+    var date = new Date();
+    var curDate = null;
+    do { curDate = new Date(); }
+    while(curDate-date < millis);
+  }  
+  
+</script>
+<body id="bodymainmonitor" style="background-color:powderblue;">
+   <center>
+   <h1>Temperatura e Umidade - Sala dos Servidores</h1>
+   <p id="temperatureParagraph">Temperatura: - </p>
+   <p id="umidityParagraph">Umidade: - </p>
+   <img aligh="right" width="500px" height="400px" src="./img/bg.jpg"/>
+   <img id="figura_sala" aligh="left" width="450px" height="400px" src="./img/sala_servidores_normal.png"/>
+   </center>
+</body>
+</html>
